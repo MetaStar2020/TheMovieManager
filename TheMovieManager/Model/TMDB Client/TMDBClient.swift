@@ -46,9 +46,40 @@ class TMDBClient {
         }
     }
     
-    class func taskForGetRequest<ResponseType: Decodable>(url: URL, reponse: ResponseType.Type, completion: @escaping (ResponseType?, Error?) -> Void) {
+    class func taskForGETRequest<ResponseType: Decodable>(url: URL, responseType: ResponseType.Type, completion: @escaping (ResponseType?, Error?) -> Void) -> URLSessionDataTask {
         let task = URLSession.shared.dataTask(with: url) { data, response, error in
             guard let data = data else {
+                //DispatchQueue.main.async {
+                //    completion(nil, error)
+                //}
+                completion(nil, error)
+                return
+            }
+            let decoder = JSONDecoder()
+            do {
+                let responseObject = try decoder.decode(ResponseType.self, from: data)
+                DispatchQueue.main.async {
+                    completion(responseObject, nil)
+                }
+            } catch {
+               
+                    DispatchQueue.main.async {
+                        completion(nil, error)
+                }
+            }
+        }
+        task.resume()
+        
+        return task
+    }
+
+  /*
+    class func taskForGETRequest<ResponseType: Decodable>(url: URL, reponseType: ResponseType.Type, completion: @escaping (ResponseType?, Error?) -> Void) -> URLSessionDataTask {
+        
+        let task = URLSession.shared.dataTask(with: url) { data, response, error in
+            guard let data = data else {
+                print("data failed")
+                print(error)
                 completion(nil, error)
                 return
             }
@@ -61,38 +92,34 @@ class TMDBClient {
             }
         }
         task.resume()
+        
+        return task
     }
+  */
     
     class func getWatchlist(completion: @escaping ([Movie], Error?) -> Void) {
         
-        taskForGetRequest(url: Endpoints.getWatchlist.url, reponse: MovieResults.self) { (response, error) in
+        taskForGETRequest(url: Endpoints.getWatchlist.url, reponseType: MovieResults.self) { response, error in
             if let response = response {
-                completion(responseObject.results, nil)
+                completion(response.results, nil)
             } else {
                 completion([], error)
             }
+        }
     }
     
     class func getRequestToken(completion: @escaping (Bool, Error?) -> Void) {
-        let task = URLSession.shared.dataTask(with: Endpoints.getRequestToken.url) { data, response, error in
-            guard let data = data else {
-                completion(false, error)
-                print("data failed")
-                return
-            }
-            let decoder = JSONDecoder()
-            do {
-                let responseObject = try decoder.decode(RequestTokenResponse.self, from: data)
-                Auth.requestToken = responseObject.requestToken
+        taskForGETRequest(url: Endpoints.getRequestToken.url, reponseType: RequestTokenResponse.self) {  response, error in
+            if let response = response {
+                Auth.requestToken = response.requestToken
                 print(Auth.requestToken)
-                completion(true, nil)
-            } catch {
+                completion(true,nil)
+            } else {
                 print("decoding failed in getRequestToken")
                 print(error)
                 completion(false, error)
             }
         }
-        task.resume()
     }
     
     class func login(username: String, password: String, completion: @escaping (Bool, Error?) -> Void) {
