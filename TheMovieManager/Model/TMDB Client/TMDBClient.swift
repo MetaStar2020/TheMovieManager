@@ -27,6 +27,8 @@ class TMDBClient {
         case getRequestToken
         case login
         case createSessionId
+        case webAuth
+        case logout
         
         var stringValue: String {
             switch self {
@@ -34,6 +36,8 @@ class TMDBClient {
             case .getRequestToken: return Endpoints.base + "/authentication/token/new" + Endpoints.apiKeyParam
             case .login: return Endpoints.base + "/authentication/token/validate_with_login" + Endpoints.apiKeyParam
             case .createSessionId: return Endpoints.base + "/authentication/session/new" + Endpoints.apiKeyParam
+            case .webAuth: return "https://www.themoviedb.org/authenticate/" + Auth.requestToken + "?redirect_to=themoviemanager:authenticate"
+            case .logout: return Endpoints.base + "/authentication/session" + Endpoints.apiKeyParam
             }
         }
         
@@ -42,21 +46,31 @@ class TMDBClient {
         }
     }
     
-    class func getWatchlist(completion: @escaping ([Movie], Error?) -> Void) {
-        let task = URLSession.shared.dataTask(with: Endpoints.getWatchlist.url) { data, response, error in
+    class func taskForGetRequest<ResponseType: Decodable>(url: URL, reponse: ResponseType.Type, completion: @escaping (ResponseType?, Error?) -> Void) {
+        let task = URLSession.shared.dataTask(with: url) { data, response, error in
             guard let data = data else {
-                completion([], error)
+                completion(nil, error)
                 return
             }
             let decoder = JSONDecoder()
             do {
-                let responseObject = try decoder.decode(MovieResults.self, from: data)
-                completion(responseObject.results, nil)
+                let responseObject = try decoder.decode(ResponseType.self, from: data)
+                completion(responseObject, nil)
             } catch {
-                completion([], error)
+                completion(nil, error)
             }
         }
         task.resume()
+    }
+    
+    class func getWatchlist(completion: @escaping ([Movie], Error?) -> Void) {
+        
+        taskForGetRequest(url: Endpoints.getWatchlist.url, reponse: MovieResults.self) { (response, error) in
+            if let response = response {
+                completion(responseObject.results, nil)
+            } else {
+                completion([], error)
+            }
     }
     
     class func getRequestToken(completion: @escaping (Bool, Error?) -> Void) {
@@ -111,7 +125,7 @@ class TMDBClient {
     }
     
     class func createSessionId(completion: @escaping (Bool, Error?) -> Void) {
-          var request = URLRequest(url: Endpoints.createSessionId.url)
+        var request = URLRequest(url: Endpoints.createSessionId.url)
               
         request.httpMethod = "POST"
         request.addValue("application/json", forHTTPHeaderField: "Content-Type")
@@ -138,4 +152,23 @@ class TMDBClient {
         }
         task.resume()
     }
+    
+    class func logout(completion: @escaping () -> Void) {
+        var request = URLRequest(url: Endpoints.logout.url)
+              
+        request.httpMethod = "DELETE"
+        let body = LogoutRequest(sessionId: Auth.sessionId)
+        request.httpBody = try! JSONEncoder().encode(body)
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+              
+        let task = URLSession.shared.dataTask(with: request) { data, response, error in
+            Auth.sessionId = ""
+            Auth.requestToken = ""
+            Auth.accountId = 0
+            completion()
+        }
+        task.resume()
+    }
+    
+    
 }
