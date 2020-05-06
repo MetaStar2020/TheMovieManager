@@ -29,6 +29,7 @@ class TMDBClient {
         case createSessionId
         case webAuth
         case logout
+        case getFavorites
         
         var stringValue: String {
             switch self {
@@ -38,6 +39,7 @@ class TMDBClient {
             case .createSessionId: return Endpoints.base + "/authentication/session/new" + Endpoints.apiKeyParam
             case .webAuth: return "https://www.themoviedb.org/authenticate/" + Auth.requestToken + "?redirect_to=themoviemanager:authenticate"
             case .logout: return Endpoints.base + "/authentication/session" + Endpoints.apiKeyParam
+            case .getFavorites: return Endpoints.base + "/account/\(Auth.accountId)/favorite/movies" + Endpoints.apiKeyParam
             }
         }
         
@@ -49,9 +51,9 @@ class TMDBClient {
     class func taskForGETRequest<ResponseType: Decodable>(url: URL, responseType: ResponseType.Type, completion: @escaping (ResponseType?, Error?) -> Void) -> URLSessionDataTask {
         let task = URLSession.shared.dataTask(with: url) { data, response, error in
             guard let data = data else {
-                //DispatchQueue.main.async {
-                //    completion(nil, error)
-                //}
+                DispatchQueue.main.async {
+                    completion(nil, error)
+                }
                 completion(nil, error)
                 return
             }
@@ -73,111 +75,106 @@ class TMDBClient {
         return task
     }
 
-  /*
-    class func taskForGETRequest<ResponseType: Decodable>(url: URL, reponseType: ResponseType.Type, completion: @escaping (ResponseType?, Error?) -> Void) -> URLSessionDataTask {
+    class func taskForPOSTRequest<RequestType: Encodable, ResponseType: Decodable>(url: URL, body: RequestType, responseType: ResponseType.Type, completion: @escaping (ResponseType?, Error?) -> Void) -> URLSessionDataTask {
         
-        let task = URLSession.shared.dataTask(with: url) { data, response, error in
+        var request = URLRequest(url: url)
+        
+        request.httpMethod = "POST"
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = try! JSONEncoder().encode(body)
+        
+        let task = URLSession.shared.dataTask(with: request) { data, response, error in
             guard let data = data else {
+                DispatchQueue.main.async {
+                    completion(nil, error)
+                }
                 print("data failed")
-                print(error)
-                completion(nil, error)
                 return
             }
             let decoder = JSONDecoder()
             do {
                 let responseObject = try decoder.decode(ResponseType.self, from: data)
-                completion(responseObject, nil)
+                DispatchQueue.main.async {
+                    completion(responseObject, nil)
+                }
             } catch {
-                completion(nil, error)
+                print("decoding failed in Login")
+                print(error)
+                DispatchQueue.main.async {
+                    completion(nil, error)
+                }
             }
         }
         task.resume()
         
+     
         return task
     }
-  */
     
     class func getWatchlist(completion: @escaping ([Movie], Error?) -> Void) {
         
-        taskForGETRequest(url: Endpoints.getWatchlist.url, reponseType: MovieResults.self) { response, error in
+        taskForGETRequest(url: Endpoints.getWatchlist.url, responseType: MovieResults.self) { response, error in
             if let response = response {
-                completion(response.results, nil)
+                    completion(response.results, nil)
             } else {
-                completion([], error)
+                    completion([], error)
+            }
+        }
+    }
+    
+    class func getFavorites(completion: @escaping ([Movie], Error?) -> Void) {
+    
+        taskForGETRequest(url: Endpoints.getFavorites.url, responseType: MovieResults.self) { response, error in
+            if let response = response {
+                    completion(response.results, nil)
+            } else {
+                    completion([], error)
             }
         }
     }
     
     class func getRequestToken(completion: @escaping (Bool, Error?) -> Void) {
-        taskForGETRequest(url: Endpoints.getRequestToken.url, reponseType: RequestTokenResponse.self) {  response, error in
+        taskForGETRequest(url: Endpoints.getRequestToken.url, responseType: RequestTokenResponse.self) {  response, error in
             if let response = response {
                 Auth.requestToken = response.requestToken
                 print(Auth.requestToken)
-                completion(true,nil)
+                    completion(true,nil)
             } else {
                 print("decoding failed in getRequestToken")
                 print(error)
-                completion(false, error)
+                    completion(false, error)
             }
         }
     }
     
     class func login(username: String, password: String, completion: @escaping (Bool, Error?) -> Void) {
-        var request = URLRequest(url: Endpoints.login.url)
-        
-        request.httpMethod = "POST"
-        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
-        let body = LoginRequest(username: username, password: password, requestToken: Auth.requestToken)
-        request.httpBody = try! JSONEncoder().encode(body)
-        
-        let task = URLSession.shared.dataTask(with: request) { data, response, error in
-            guard let data = data else {
-                completion(false, error)
-                print("data failed")
-                return
-            }
-            let decoder = JSONDecoder()
-            do {
-                let responseObject = try decoder.decode(RequestTokenResponse.self, from: data)
-                Auth.requestToken = responseObject.requestToken
+        taskForPOSTRequest(url: Endpoints.login.url, body: LoginRequest(username: username, password: password, requestToken: Auth.requestToken), responseType: RequestTokenResponse.self) { response, error in
+                
+            if let response = response {
+                Auth.requestToken = response.requestToken
                 print(Auth.requestToken)
-                completion(true, nil)
-            } catch {
+                    completion(true, nil)
+            } else {
                 print("decoding failed in Login")
                 print(error)
-                completion(false, error)
+                    completion(false, error)
             }
         }
-        task.resume()
     }
     
     class func createSessionId(completion: @escaping (Bool, Error?) -> Void) {
-        var request = URLRequest(url: Endpoints.createSessionId.url)
-              
-        request.httpMethod = "POST"
-        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
-        let body = PostSession(requestToken: Auth.requestToken)
-        request.httpBody = try! JSONEncoder().encode(body)
-              
-        let task = URLSession.shared.dataTask(with: request) { data, response, error in
-            guard let data = data else {
-                completion(false, error)
-                print("data failed")
-                return
-            }
-            let decoder = JSONDecoder()
-            do {
-                let responseObject = try decoder.decode(SessionResponse.self, from: data)
-                Auth.sessionId = responseObject.sessionId
+        taskForPOSTRequest(url: Endpoints.createSessionId.url, body: PostSession(requestToken: Auth.requestToken), responseType: SessionResponse.self) { response, error in
+        
+            if let response = response {
+                Auth.sessionId = response.sessionId
                 print(Auth.sessionId)
-                completion(true, nil)
-            } catch {
+                    completion(true, nil)
+            } else {
                 print("decoding failed in Creating Session ID")
                 print(error)
-                completion(false, error)
+                    completion(false, error)
             }
         }
-        task.resume()
     }
     
     class func logout(completion: @escaping () -> Void) {
