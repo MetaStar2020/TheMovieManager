@@ -39,7 +39,7 @@ class TMDBClient {
             case .createSessionId: return Endpoints.base + "/authentication/session/new" + Endpoints.apiKeyParam
             case .webAuth: return "https://www.themoviedb.org/authenticate/" + Auth.requestToken + "?redirect_to=themoviemanager:authenticate"
             case .logout: return Endpoints.base + "/authentication/session" + Endpoints.apiKeyParam
-            case .getFavorites: return Endpoints.base + "/account/\(Auth.accountId)/favorite/movies" + Endpoints.apiKeyParam
+            case .getFavorites: return Endpoints.base + "/account/\(Auth.accountId)/favorite/movies" + Endpoints.apiKeyParam + "&session_id=\(Auth.sessionId)"
             }
         }
         
@@ -47,6 +47,7 @@ class TMDBClient {
             return URL(string: stringValue)!
         }
     }
+
     
     class func taskForGETRequest<ResponseType: Decodable>(url: URL, responseType: ResponseType.Type, completion: @escaping (ResponseType?, Error?) -> Void) -> URLSessionDataTask {
         let task = URLSession.shared.dataTask(with: url) { data, response, error in
@@ -126,6 +127,7 @@ class TMDBClient {
     
         taskForGETRequest(url: Endpoints.getFavorites.url, responseType: MovieResults.self) { response, error in
             if let response = response {
+                print("getFavorites:\(response.results)")
                     completion(response.results, nil)
             } else {
                     completion([], error)
@@ -163,6 +165,7 @@ class TMDBClient {
     }
     
     class func createSessionId(completion: @escaping (Bool, Error?) -> Void) {
+        
         taskForPOSTRequest(url: Endpoints.createSessionId.url, body: PostSession(requestToken: Auth.requestToken), responseType: SessionResponse.self) { response, error in
         
             if let response = response {
