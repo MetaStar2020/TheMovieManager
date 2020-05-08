@@ -30,6 +30,8 @@ class TMDBClient {
         case webAuth
         case logout
         case getFavorites
+        case search(String)
+        case markWatchlist
         
         var stringValue: String {
             switch self {
@@ -40,6 +42,9 @@ class TMDBClient {
             case .webAuth: return "https://www.themoviedb.org/authenticate/" + Auth.requestToken + "?redirect_to=themoviemanager:authenticate"
             case .logout: return Endpoints.base + "/authentication/session" + Endpoints.apiKeyParam
             case .getFavorites: return Endpoints.base + "/account/\(Auth.accountId)/favorite/movies" + Endpoints.apiKeyParam + "&session_id=\(Auth.sessionId)"
+            case .search(let query): return Endpoints.base + "/search/movie" + Endpoints.apiKeyParam + "&query=\(query.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""))"
+                case .markWatchlist:
+            return Endpoints.base + "/account/\(Auth.accountId)/watchlist" + Endpoints.apiKeyParam + "&session_id=\(Auth.sessionId)"
             }
         }
         
@@ -112,6 +117,17 @@ class TMDBClient {
         return task
     }
     
+    class func search(query: String, completion: @escaping ([Movie], Error?) -> Void) {
+        
+        taskForGETRequest(url: Endpoints.search(query).url, responseType: MovieResults.self) { response, error in
+            if let response = response {
+                    completion(response.results, nil)
+            } else {
+                    completion([], error)
+            }
+        }
+    }
+    
     class func getWatchlist(completion: @escaping ([Movie], Error?) -> Void) {
         
         taskForGETRequest(url: Endpoints.getWatchlist.url, responseType: MovieResults.self) { response, error in
@@ -176,6 +192,19 @@ class TMDBClient {
                 print("decoding failed in Creating Session ID")
                 print(error)
                     completion(false, error)
+            }
+        }
+    }
+    
+    class func markWatchlist(movieId: Int, watchlist: Bool, completion: @escaping (Bool, Error?) -> Void) {
+        let body = MarkWatchlist(mediaType: "movie", mediaId: movieId, watchlist: watchlist)
+        taskForPOSTRequest(url: Endpoints.markWatchlist.url, body: body, responseType: TMDBResponse.self) { response, error in
+            if let response = response {
+                // separate codes are used for posting, deleting, and updating a response
+                // all are considered "successful"
+                completion(response.statusCode == 1 || response.statusCode == 12 || response.statusCode == 13, nil)
+            } else {
+                completion(false, nil)
             }
         }
     }
