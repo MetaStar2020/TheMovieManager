@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import UIKit
 
 class TMDBClient {
     
@@ -225,8 +226,13 @@ class TMDBClient {
         }
     }
     
-    class func downloadPosterImage(posterPath: String, completion:@escaping (Data?, Error?) -> Void) {
-        
+    class func downloadPosterData(posterPath: String, completion:@escaping (Data?, Error?) -> Void) {
+        let imageDataTask = URLSession.shared.dataTask(with: Endpoints.posterImageURL(posterPath).url) { imageURLData, response, error in
+                DispatchQueue.main.async {
+                    completion(imageURLData, error)
+                }
+            }
+        imageDataTask.resume()
     }
     
     class func logout(completion: @escaping () -> Void) {
