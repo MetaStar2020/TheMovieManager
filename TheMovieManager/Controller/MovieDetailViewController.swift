@@ -39,19 +39,32 @@ class MovieDetailViewController: UIViewController {
     }
     
     @IBAction func favoriteButtonTapped(_ sender: UIBarButtonItem) {
-
+        TMDBClient.markFavorite(movieId: movie.id, favorite: !isFavorite, completion: handleFavoriteResponse(success:error:))
     }
     
     func handleWatchlistResponse(success: Bool, error: Error?) {
         if success {
             if isWatchlist {
                 print("before delete: \(MovieModel.watchlist.count)")
-                MovieModel.watchlist = MovieModel.watchlist.filter() {$0 != movie}
+                MovieModel.watchlist = MovieModel.watchlist.filter() {$0 != self.movie}
                 print("after delete: \(MovieModel.watchlist.count)")
             } else {
                 MovieModel.watchlist.append(movie)
             }
             toggleBarButton(watchlistBarButtonItem, enabled: isWatchlist)
+        }
+    }
+    
+    func handleFavoriteResponse(success: Bool, error: Error?) {
+        if success {
+            if isFavorite {
+                print("before delete: \(MovieModel.favorites.count)")
+                MovieModel.favorites = MovieModel.favorites.filter() {$0 != self.movie}
+                print("after delete: \(MovieModel.favorites.count)")
+            } else {
+                MovieModel.favorites.append(movie)
+            }
+            toggleBarButton(favoriteBarButtonItem, enabled: isFavorite)
         }
     }
     

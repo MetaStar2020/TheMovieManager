@@ -32,6 +32,8 @@ class TMDBClient {
         case getFavorites
         case search(String)
         case markWatchlist
+        case markFavorite
+        case posterImageURL(String)
         
         var stringValue: String {
             switch self {
@@ -43,8 +45,9 @@ class TMDBClient {
             case .logout: return Endpoints.base + "/authentication/session" + Endpoints.apiKeyParam
             case .getFavorites: return Endpoints.base + "/account/\(Auth.accountId)/favorite/movies" + Endpoints.apiKeyParam + "&session_id=\(Auth.sessionId)"
             case .search(let query): return Endpoints.base + "/search/movie" + Endpoints.apiKeyParam + "&query=\(query.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""))"
-                case .markWatchlist:
-            return Endpoints.base + "/account/\(Auth.accountId)/watchlist" + Endpoints.apiKeyParam + "&session_id=\(Auth.sessionId)"
+            case .markWatchlist: return Endpoints.base + "/account/\(Auth.accountId)/watchlist" + Endpoints.apiKeyParam + "&session_id=\(Auth.sessionId)"
+            case .markFavorite: return Endpoints.base + "/account/\(Auth.accountId)/favorite" + Endpoints.apiKeyParam + "&session_id=\(Auth.sessionId)"
+            case .posterImageURL(let posterPath): return "https://image.tmdb.org/t/p/w500" + posterPath
             }
         }
         
@@ -207,6 +210,23 @@ class TMDBClient {
                 completion(false, nil)
             }
         }
+    }
+    
+    class func markFavorite(movieId: Int, favorite: Bool, completion: @escaping (Bool, Error?) -> Void) {
+        let body = MarkFavorite(mediaType: "movie", mediaId: movieId, favorite: favorite)
+        taskForPOSTRequest(url: Endpoints.markFavorite.url, body: body, responseType: TMDBResponse.self) { response, error in
+            if let response = response {
+                // separate codes are used for posting, deleting, and updating a response
+                // all are considered "successful"
+                completion(response.statusCode == 1 || response.statusCode == 12 || response.statusCode == 13, nil)
+            } else {
+                completion(false, nil)
+            }
+        }
+    }
+    
+    class func downloadPosterImage(posterPath: String, completion:@escaping (Data?, Error?) -> Void) {
+        
     }
     
     class func logout(completion: @escaping () -> Void) {

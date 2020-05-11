@@ -9,6 +9,7 @@
 import Foundation
 
 struct TMDBResponse: Codable {
+    
     let statusCode: Int
     let statusMessage: String
     
