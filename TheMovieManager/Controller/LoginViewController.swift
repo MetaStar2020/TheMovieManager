@@ -14,6 +14,7 @@ class LoginViewController: UIViewController {
     @IBOutlet weak var passwordTextField: UITextField!
     @IBOutlet weak var loginButton: UIButton!
     @IBOutlet weak var loginViaWebsiteButton: UIButton!
+    @IBOutlet weak var activityIndicator: UIActivityIndicatorView!
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
@@ -23,11 +24,14 @@ class LoginViewController: UIViewController {
     }
     
     @IBAction func loginTapped(_ sender: UIButton) {
+        
+        setLoggingIn(true)
         TMDBClient.getRequestToken(completion: handleRequestTokenResponse(success:error:))
     }
     
     @IBAction func loginViaWebsiteTapped() {
-        //performSegue(withIdentifier: "completeLogin", sender: nil)
+   
+        setLoggingIn(true)
         TMDBClient.getRequestToken { (success, error) in
             if success {
                 DispatchQueue.main.async {
@@ -55,7 +59,9 @@ class LoginViewController: UIViewController {
     }
     
     func handleSessionResponse(success: Bool, error: Error?) {
-            
+        
+        print("loginIn false")
+        setLoggingIn(false)
         if success {
             print(TMDBClient.Auth.sessionId)
                 self.performSegue(withIdentifier: "completeLogin", sender: nil)
