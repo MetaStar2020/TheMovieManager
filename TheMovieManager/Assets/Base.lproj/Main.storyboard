@@ -281,7 +281,7 @@
                                     </barButtonItem>
                                 </items>
                             </toolbar>
-                            <imageView userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="Waw-f1-Pfh">
+                            <imageView userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="PosterPlaceholder" translatesAutoresizingMaskIntoConstraints="NO" id="Waw-f1-Pfh">
                                 <rect key="frame" x="0.0" y="56" width="375" height="547"/>
                             </imageView>
                         </subviews>
@@ -412,6 +412,7 @@
         <image name="Favorite" width="32" height="32"/>
         <image name="Genre" width="30" height="30"/>
         <image name="List" width="32" height="32"/>
+        <image name="PosterPlaceholder" width="256" height="256"/>
     </resources>
     <inferredMetricsTieBreakers>
         <segue reference="co5-nL-1jj"/>
