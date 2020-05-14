@@ -35,10 +35,15 @@ class LoginViewController: UIViewController {
         TMDBClient.getRequestToken { (success, error) in
             if success {
                 DispatchQueue.main.async {
-                UIApplication.shared.open(TMDBClient.Endpoints.webAuth.url, options: [:], completionHandler: nil)
+                    UIApplication.shared.open(TMDBClient.Endpoints.webAuth.url, options: [:], completionHandler: self.handleWebsiteResponse(success:))
                 }
-                
             }
+        }
+    }
+    
+    func handleWebsiteResponse(success: Bool) {
+        if success {
+            self.setLoggingIn(false)
         }
     }
     
@@ -72,8 +77,13 @@ class LoginViewController: UIViewController {
    func setLoggingIn(_ loggingIn: Bool) {
         if loggingIn {
             activityIndicator.startAnimating()
+            
         } else {
             activityIndicator.stopAnimating()
         }
+        emailTextField.isEnabled = !loggingIn
+        passwordTextField.isEnabled = !loggingIn
+        loginButton.isEnabled = !loggingIn
+        loginViaWebsiteButton.isEnabled = !loggingIn
     }
 }
