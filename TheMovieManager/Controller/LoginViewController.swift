@@ -62,4 +62,12 @@ class LoginViewController: UIViewController {
         }
         
     }
+    
+   func setLoggingIn(_ loggingIn: Bool) {
+        if loggingIn {
+            activityIndicator.startAnimating()
+        } else {
+            activityIndicator.stopAnimating()
+        }
+    }
 }

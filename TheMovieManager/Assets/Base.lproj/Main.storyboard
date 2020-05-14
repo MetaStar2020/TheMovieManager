@@ -87,6 +87,9 @@
                                 <color key="textColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                                 <color key="highlightedColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                             </label>
+                            <activityIndicatorView opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" style="whiteLarge" translatesAutoresizingMaskIntoConstraints="NO" id="zl6-e4-TXj">
+                                <rect key="frame" x="169" y="456" width="37" height="37"/>
+                            </activityIndicatorView>
                         </subviews>
                         <color key="backgroundColor" red="0.0078431372550000003" green="0.70196078429999997" blue="0.89411764709999997" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                         <constraints>
@@ -100,6 +103,8 @@
                             <constraint firstItem="9EU-Nu-cBG" firstAttribute="leading" secondItem="6Tk-OE-BBY" secondAttribute="leading" constant="16" id="aMw-l6-3rG"/>
                             <constraint firstItem="6Tk-OE-BBY" firstAttribute="trailing" secondItem="6au-LF-Utu" secondAttribute="trailing" constant="16" id="c34-4Z-ddZ"/>
                             <constraint firstItem="SyQ-Nw-CjV" firstAttribute="top" secondItem="n8z-V4-qAW" secondAttribute="bottom" constant="8" id="l3s-Le-IHY"/>
+                            <constraint firstItem="zl6-e4-TXj" firstAttribute="centerX" secondItem="6Tk-OE-BBY" secondAttribute="centerX" id="lXY-kz-nUE"/>
+                            <constraint firstItem="zl6-e4-TXj" firstAttribute="top" secondItem="6au-LF-Utu" secondAttribute="bottom" constant="8" id="oLC-FD-Jxo"/>
                             <constraint firstItem="6Tk-OE-BBY" firstAttribute="bottom" secondItem="9EU-Nu-cBG" secondAttribute="bottom" constant="20" id="uUC-ZZ-la3"/>
                             <constraint firstItem="6Tk-OE-BBY" firstAttribute="trailing" secondItem="n8z-V4-qAW" secondAttribute="trailing" constant="16" id="yv3-3r-PNZ"/>
                         </constraints>
