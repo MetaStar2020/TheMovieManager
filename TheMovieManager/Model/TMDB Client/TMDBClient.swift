@@ -74,9 +74,15 @@ class TMDBClient {
                     completion(responseObject, nil)
                 }
             } catch {
-               
+               do {
+                   let errorResponse = try decoder.decode(TMDBResponse.self, from: data) as Error
+                   DispatchQueue.main.async {
+                       completion(nil, errorResponse)
+                   }
+               } catch {
                     DispatchQueue.main.async {
-                        completion(nil, error)
+                       completion(nil, error)
+                    }
                 }
             }
         }
@@ -103,15 +109,16 @@ class TMDBClient {
             }
             let decoder = JSONDecoder()
             do {
-                let responseObject = try decoder.decode(ResponseType.self, from: data)
-                DispatchQueue.main.async {
-                    completion(responseObject, nil)
-                }
-            } catch {
-                print("decoding failed in Login")
-                print(error)
-                DispatchQueue.main.async {
-                    completion(nil, error)
+                do {
+                    let errorResponse = try decoder.decode(TMDBResponse.self, from: data) as Error
+                    print("decoding failed in Login")
+                    DispatchQueue.main.async {
+                        completion(nil, errorResponse)
+                    }
+                } catch {
+                    DispatchQueue.main.async {
+                        completion(nil, error)
+                    }
                 }
             }
         }
